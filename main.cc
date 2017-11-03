@@ -73,17 +73,45 @@ void dfs(State current, std::vector<int> goal){
                 dfs(nextState, goal);
             }
         }
-        if((zeroIndex % y) < (y - 1)){
+        if((zeroIndex % (x * y)) < (x * y - 1)){
             //you can move up
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                dfs(nextState, goal);
+            }
         }
-        if((zeroIndex % y) > 0){
+        if((zeroIndex % (x * y)) > 0){
             //you can move down
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                dfs(nextState, goal);
+            }
         }
-        if((zeroIndex % z) < (z - 1)){
+        if((zeroIndex % (x * y * z)) < ((x * y * z) - 1)){
             //you can move to the front
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x * y]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                dfs(nextState, goal);
+            }
         }
-        if((zeroIndex % z) > 0){
+        if((zeroIndex % (x * y * z)) > 0){
             //you can move to the back
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x * y]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                dfs(nextState, goal);
+            }
         }
     }
 }
