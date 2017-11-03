@@ -3,6 +3,7 @@
 #include <set>
 #include <queue>
 #include <cstdio>
+#include <utility>
 
 int x, y, z;
 
@@ -12,6 +13,13 @@ class State {
         State *parent;
         int depth;
         State(std::vector<int> g, State *p, int d): grid(g), parent(p), depth(d){}
+
+        bool operator<(const State& a) const {
+            return this->depth < a.depth;
+        }
+        bool operator<(int b) const {
+            return this->depth < b;
+        }
 };
 
 int findZero(std::vector<int> v){
@@ -31,8 +39,17 @@ bool isGoalState(State s, std::vector<int> goal){
     return s.grid == goal;
 }
 
+int manhattanHeuristic(std::vector<int> grid){
+    for(int i = 0; i < grid.size(); i++){
+        if(grid[i] == 0) continue;
+
+    }
+    return 0;
+}
+
+//TODO: Fix Printing ancestors
 void printAncestors(State s){
-    if(NULL == s.parent){
+    if(s.depth == 0){
         std::cout << "Reached Initial State!" << std::endl;
         return;
     }
@@ -51,83 +68,99 @@ void printAncestors(State s){
 
 void dfs(State current, std::vector<int> goal){
     visited.insert(current.grid);
-    if(isVisited(current.grid)){
-        return;
-    }
+
     if(isGoalState(current, goal)){
+        std::cout << "Depth is " << current.depth << std::endl;
         std::cout << "Goal state reached" << std::endl;
-        printAncestors(current);
+        //printAncestors(current);
         return;
-    } else {
-        //find the zero and move it in all possible positions
-        int zeroIndex = findZero(current.grid);
-        if((zeroIndex % x) < (x - 1) && zeroIndex + 1 < x * y * z){
-            //you can move right
-            std::vector<int> nextGrid = current.grid;
-            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + 1]);
-            if(!isVisited(nextGrid)){
-                State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
-            }
-        }
-        if((zeroIndex % x) > 0){
-            //you can move left
-            std::vector<int> nextGrid = current.grid;
-            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - 1]);
-            if(!isVisited(nextGrid)){
-                State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
-            }
-        }
-        if((zeroIndex % (x * y)) < (x * y - 1) && zeroIndex + x < x * y * z){
-            //you can move up
-            std::vector<int> nextGrid = current.grid;
-            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x]);
-            if(!isVisited(nextGrid)){
-                State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
-            }
-        }
-        if((zeroIndex % (x * y)) > 0 && zeroIndex - x > -1){
-            //you can move down
-            std::vector<int> nextGrid = current.grid;
-            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x]);
-            if(!isVisited(nextGrid)){
-                State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
-            }
-        }
-        if((zeroIndex % (x * y * z)) < ((x * y * z) - 1) && zeroIndex + x * y < x * y * z){
-            //you can move to the front
-            std::vector<int> nextGrid = current.grid;
-            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x * y]);
-            if(!isVisited(nextGrid)){
-                State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
-            }
-        }
-        if((zeroIndex % (x * y * z)) > 0 && zeroIndex - x * y > -1){
-            //you can move to the back
-            std::vector<int> nextGrid = current.grid;
-            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x * y]);
-            if(!isVisited(nextGrid)){
-                State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
-            }
+    }
+    //find the zero and move it in all possible positions
+    int zeroIndex = findZero(current.grid);
+    if((zeroIndex % x) < (x - 1) && zeroIndex + 1 < x * y * z){
+        //you can move right
+        std::vector<int> nextGrid = current.grid;
+        std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + 1]);
+        if(!isVisited(nextGrid)){
+            State nextState(nextGrid, &current, current.depth + 1);
+            dfs(nextState, goal);
         }
     }
+
+    if((zeroIndex % x) > 0){
+        //you can move left
+        std::vector<int> nextGrid = current.grid;
+        std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - 1]);
+        if(!isVisited(nextGrid)){
+            State nextState(nextGrid, &current, current.depth + 1);
+            dfs(nextState, goal);
+        }
+    }
+
+    if((zeroIndex % (x * y)) < (x * y - 1) && zeroIndex + x < x * y * z){
+        //you can move up
+        std::vector<int> nextGrid = current.grid;
+        std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x]);
+        if(!isVisited(nextGrid)){
+            State nextState(nextGrid, &current, current.depth + 1);
+            dfs(nextState, goal);
+        }
+    }
+
+    if((zeroIndex % (x * y)) > 0 && zeroIndex - x >= 0){
+        //you can move down
+        std::vector<int> nextGrid = current.grid;
+        std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x]);
+        if(!isVisited(nextGrid)){
+            State nextState(nextGrid, &current, current.depth + 1);
+            dfs(nextState, goal);
+        }
+    }
+
+    if((zeroIndex % (x * y * z)) < ((x * y * z) - 1) && zeroIndex + x * y < x * y * z){
+        //you can move to the front
+        std::vector<int> nextGrid = current.grid;
+        std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x * y]);
+        if(!isVisited(nextGrid)){
+            State nextState(nextGrid, &current, current.depth + 1);
+            dfs(nextState, goal);
+        }
+    }
+
+    if((zeroIndex % (x * y * z)) > 0 && zeroIndex - x * y >= 0){
+        //you can move to the back
+        std::vector<int> nextGrid = current.grid;
+        std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x * y]);
+        if(!isVisited(nextGrid)){
+            State nextState(nextGrid, &current, current.depth + 1);
+            dfs(nextState, goal);
+        }
+    }
+    return;
 }
 
 void bfs(State s, std::vector<int> goal){
     std::queue<State> bfsQueue;
     bfsQueue.push(s);
+    visited.insert(s.grid);
 
     while(!bfsQueue.empty()){
+
         State current = bfsQueue.front();
+        bfsQueue.pop();
+
+        /*
+        for(int i = 0; i < current.grid.size(); i++){
+            if(i % x == 0) std::cout << std::endl;
+            std::cout << current.grid[i] << " ";
+        }
+        std::cout << std::endl;
+        */
 
         if(isGoalState(current, goal)){
+            std::cout << "Depth is " << current.depth << std::endl;
             std::cout << "Goal state reached" << std::endl;
-            printAncestors(current);
+            //printAncestors(current);
             return;
         }
 
@@ -152,7 +185,7 @@ void bfs(State s, std::vector<int> goal){
                 bfsQueue.push(nextState);
             }
         }
-        if((zeroIndex % (x * y)) < (x * y - 1)){
+        if((zeroIndex % (x * y)) < (x * y - 1) && zeroIndex + x < x * y * z){
             //you can move up
             std::vector<int> nextGrid = current.grid;
             std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x]);
@@ -162,7 +195,7 @@ void bfs(State s, std::vector<int> goal){
                 bfsQueue.push(nextState);
             }
         }
-        if((zeroIndex % (x * y)) > 0){
+        if((zeroIndex % (x * y)) > 0 && zeroIndex - x > -1){
             //you can move down
             std::vector<int> nextGrid = current.grid;
             std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x]);
@@ -172,7 +205,7 @@ void bfs(State s, std::vector<int> goal){
                 bfsQueue.push(nextState);
             }
         }
-        if((zeroIndex % (x * y * z)) < ((x * y * z) - 1)){
+        if((zeroIndex % (x * y * z)) < ((x * y * z) - 1) && zeroIndex + x * y < x * y * z){
             //you can move to the front
             std::vector<int> nextGrid = current.grid;
             std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x * y]);
@@ -182,7 +215,7 @@ void bfs(State s, std::vector<int> goal){
                 bfsQueue.push(nextState);
             }
         }
-        if((zeroIndex % (x * y * z)) > 0){
+        if((zeroIndex % (x * y * z)) > 0 && zeroIndex - x * y > -1){
             //you can move to the back
             std::vector<int> nextGrid = current.grid;
             std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x * y]);
@@ -192,12 +225,98 @@ void bfs(State s, std::vector<int> goal){
                 bfsQueue.push(nextState);
             }
         }
-        bfsQueue.pop();
+
     }
 }
 
-void greedyBFS(){
+void greedyBFS(State s, std::vector<int> goal){
+    std::priority_queue< std::pair<int, State> > bfsQueue;
+    bfsQueue.push(std::make_pair(manhattanHeuristic(s.grid), s));
+    visited.insert(s.grid);
 
+    while(!bfsQueue.empty()){
+
+        State current = bfsQueue.top().second;
+        bfsQueue.pop();
+
+        /*
+        for(int i = 0; i < current.grid.size(); i++){
+            if(i % x == 0) std::cout << std::endl;
+            std::cout << current.grid[i] << " ";
+        }
+        std::cout << std::endl;
+        */
+
+        if(isGoalState(current, goal)){
+            std::cout << "Depth is " << current.depth << std::endl;
+            std::cout << "Goal state reached" << std::endl;
+            //printAncestors(current);
+            return;
+        }
+
+        int zeroIndex = findZero(current.grid);
+        if((zeroIndex % x) < (x - 1)){
+            //you can move right
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + 1]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+            }
+        }
+        if((zeroIndex % x) > 0){
+            //you can move left
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - 1]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+            }
+        }
+        if((zeroIndex % (x * y)) < (x * y - 1) && zeroIndex + x < x * y * z){
+            //you can move up
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+            }
+        }
+        if((zeroIndex % (x * y)) > 0 && zeroIndex - x > -1){
+            //you can move down
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+            }
+        }
+        if((zeroIndex % (x * y * z)) < ((x * y * z) - 1) && zeroIndex + x * y < x * y * z){
+            //you can move to the front
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x * y]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+            }
+        }
+        if((zeroIndex % (x * y * z)) > 0 && zeroIndex - x * y > -1){
+            //you can move to the back
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x * y]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+            }
+        }
+
+    }
 }
 
 void aStar(){
@@ -231,7 +350,7 @@ int main(void){
     } else if(alg == "bfs"){
         bfs(initialState, goalGrid);
     } else if(alg == "greedyBFS"){
-        greedyBFS();
+        greedyBFS(initialState, goalGrid);
     } else if(alg == "aStar"){
         aStar();
     }
