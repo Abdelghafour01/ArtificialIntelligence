@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <set>
+#include <queue>
+#include <cstdio>
 
 int x, y, z;
 
@@ -35,7 +37,7 @@ void printAncestors(State s){
         return;
     }
 
-    std::cout << "----------------" << std::endl;
+    std::cout << "Depth == " << s.depth;
     for(int i = 0; i < s.grid.size(); i++){
         if(i % x == 0){
             std::cout << std::endl;
@@ -43,22 +45,27 @@ void printAncestors(State s){
         std::cout << s.grid[i] << " ";
     }
 
+    std::cout << std::endl;
     printAncestors(*s.parent);
 }
 
 void dfs(State current, std::vector<int> goal){
+    visited.insert(current.grid);
+    if(isVisited(current.grid)){
+        return;
+    }
     if(isGoalState(current, goal)){
         std::cout << "Goal state reached" << std::endl;
         printAncestors(current);
+        return;
     } else {
         //find the zero and move it in all possible positions
         int zeroIndex = findZero(current.grid);
-        if((zeroIndex % x) < (x - 1)){
+        if((zeroIndex % x) < (x - 1) && zeroIndex + 1 < x * y * z){
             //you can move right
             std::vector<int> nextGrid = current.grid;
             std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + 1]);
             if(!isVisited(nextGrid)){
-                visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
                 dfs(nextState, goal);
             }
@@ -68,9 +75,81 @@ void dfs(State current, std::vector<int> goal){
             std::vector<int> nextGrid = current.grid;
             std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - 1]);
             if(!isVisited(nextGrid)){
-                visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
                 dfs(nextState, goal);
+            }
+        }
+        if((zeroIndex % (x * y)) < (x * y - 1) && zeroIndex + x < x * y * z){
+            //you can move up
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x]);
+            if(!isVisited(nextGrid)){
+                State nextState(nextGrid, &current, current.depth + 1);
+                dfs(nextState, goal);
+            }
+        }
+        if((zeroIndex % (x * y)) > 0 && zeroIndex - x > -1){
+            //you can move down
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x]);
+            if(!isVisited(nextGrid)){
+                State nextState(nextGrid, &current, current.depth + 1);
+                dfs(nextState, goal);
+            }
+        }
+        if((zeroIndex % (x * y * z)) < ((x * y * z) - 1) && zeroIndex + x * y < x * y * z){
+            //you can move to the front
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x * y]);
+            if(!isVisited(nextGrid)){
+                State nextState(nextGrid, &current, current.depth + 1);
+                dfs(nextState, goal);
+            }
+        }
+        if((zeroIndex % (x * y * z)) > 0 && zeroIndex - x * y > -1){
+            //you can move to the back
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x * y]);
+            if(!isVisited(nextGrid)){
+                State nextState(nextGrid, &current, current.depth + 1);
+                dfs(nextState, goal);
+            }
+        }
+    }
+}
+
+void bfs(State s, std::vector<int> goal){
+    std::queue<State> bfsQueue;
+    bfsQueue.push(s);
+
+    while(!bfsQueue.empty()){
+        State current = bfsQueue.front();
+
+        if(isGoalState(current, goal)){
+            std::cout << "Goal state reached" << std::endl;
+            printAncestors(current);
+            return;
+        }
+
+        int zeroIndex = findZero(current.grid);
+        if((zeroIndex % x) < (x - 1)){
+            //you can move right
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + 1]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(nextState);
+            }
+        }
+        if((zeroIndex % x) > 0){
+            //you can move left
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - 1]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(nextState);
             }
         }
         if((zeroIndex % (x * y)) < (x * y - 1)){
@@ -80,7 +159,7 @@ void dfs(State current, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
+                bfsQueue.push(nextState);
             }
         }
         if((zeroIndex % (x * y)) > 0){
@@ -90,7 +169,7 @@ void dfs(State current, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
+                bfsQueue.push(nextState);
             }
         }
         if((zeroIndex % (x * y * z)) < ((x * y * z) - 1)){
@@ -100,7 +179,7 @@ void dfs(State current, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
+                bfsQueue.push(nextState);
             }
         }
         if((zeroIndex % (x * y * z)) > 0){
@@ -110,18 +189,10 @@ void dfs(State current, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                dfs(nextState, goal);
+                bfsQueue.push(nextState);
             }
         }
-    }
-}
-
-void bfs(State s, std::vector<int> goal){
-    if(isGoalState(s, goal)){
-        std::cout << "Goal state reached" << std::endl;
-        printAncestors(s);
-    } else {
-        //BFS
+        bfsQueue.pop();
     }
 }
 
@@ -134,6 +205,7 @@ void aStar(){
 }
 
 int main(void){
+    freopen("in.in", "r", stdin);
     //get dimensions of the grid
     std::cin >> x >> y >> z;
     int vectorSize = x * y * z;
@@ -144,13 +216,16 @@ int main(void){
         std::cin >> inGrid[i];
     }
     State initialState = State(inGrid, NULL, 0);
+
     //Get goal state
     std::vector<int> goalGrid(vectorSize);
     for(int i = 0; i < vectorSize; i++){
         std::cin >> goalGrid[i];
     }
 
+    std::cin.ignore();
     std::string alg; std::cin >> alg;
+
     if(alg == "dfs"){
         dfs(initialState, goalGrid);
     } else if(alg == "bfs"){
