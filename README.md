@@ -14,3 +14,6 @@ Input and Output files can be used with the program. for the default code to wor
 
 ### 4. Remarks:
 Since the execution of the DFS Algorithm is far from being optimal, the memory reserved for the program may be saturated, and the program may be killed before reaching the goal state. Therefore, it is completely normal for the program to crash especially in that case.
+
+### 5. The Search strategies Comparison:
+To compare search strategies, we used many sets of initial states/goal states configurations. While BFS was relatively stable and was somehow optimal, DFS search took a longer time in general, and was even stuck and crashing (see section 4). About informed search, Greedy BFS was unstable in terms of results. It was better than BFS in some cases, and worse in some others. The A* Algorithm was a lot stable and provided results closer, in general, to the original BFS, and was even better in some cases. We can conclude that to solve this puzzle efficiently and reduce the time complexity, a better heuristic function should be used.
