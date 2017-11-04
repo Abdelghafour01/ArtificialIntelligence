@@ -4,6 +4,8 @@
 #include <queue>
 #include <cstdio>
 #include <utility>
+#include <map>
+#include <cstdlib>
 
 int x, y, z;
 
@@ -39,12 +41,23 @@ bool isGoalState(State s, std::vector<int> goal){
     return s.grid == goal;
 }
 
-int manhattanHeuristic(std::vector<int> grid){
+int manhattanHeuristic(std::vector<int> grid, std::vector<int> goal){
+    std::map<int, int> goalMap;
+
+    for(int i = 0; i < goal.size(); i++){
+        goalMap[goal[i]] = i;
+    }
+
+    int heuristic = 0;
     for(int i = 0; i < grid.size(); i++){
-        if(grid[i] == 0) continue;
+        if(grid[i] == 0){
+            continue;
+        } else {
+            heuristic += abs( (i % x) - (goalMap[grid[i]] % x)) + abs(((i / x) % y) - ((goalMap[grid[i]] / x) % y)) + abs(((i / (x * y)) % z) - (((goalMap[grid[i]] / (x * y)) % z)));
+        }
 
     }
-    return 0;
+    return heuristic;
 }
 
 //TODO: Fix Printing ancestors
@@ -231,7 +244,7 @@ void bfs(State s, std::vector<int> goal){
 
 void greedyBFS(State s, std::vector<int> goal){
     std::priority_queue< std::pair<int, State> > bfsQueue;
-    bfsQueue.push(std::make_pair(manhattanHeuristic(s.grid), s));
+    bfsQueue.push(std::make_pair(manhattanHeuristic(s.grid, goal), s));
     visited.insert(s.grid);
 
     while(!bfsQueue.empty()){
@@ -262,7 +275,7 @@ void greedyBFS(State s, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid, goal), nextState));
             }
         }
         if((zeroIndex % x) > 0){
@@ -272,7 +285,7 @@ void greedyBFS(State s, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid, goal), nextState));
             }
         }
         if((zeroIndex % (x * y)) < (x * y - 1) && zeroIndex + x < x * y * z){
@@ -282,7 +295,7 @@ void greedyBFS(State s, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid, goal), nextState));
             }
         }
         if((zeroIndex % (x * y)) > 0 && zeroIndex - x > -1){
@@ -292,7 +305,7 @@ void greedyBFS(State s, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid, goal), nextState));
             }
         }
         if((zeroIndex % (x * y * z)) < ((x * y * z) - 1) && zeroIndex + x * y < x * y * z){
@@ -302,7 +315,7 @@ void greedyBFS(State s, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid, goal), nextState));
             }
         }
         if((zeroIndex % (x * y * z)) > 0 && zeroIndex - x * y > -1){
@@ -312,16 +325,105 @@ void greedyBFS(State s, std::vector<int> goal){
             if(!isVisited(nextGrid)){
                 visited.insert(nextGrid);
                 State nextState(nextGrid, &current, current.depth + 1);
-                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid), nextState));
+                bfsQueue.push(std::make_pair(manhattanHeuristic(nextGrid, goal), nextState));
             }
         }
 
     }
 }
 
-void aStar(){
+// The A* Algorithm is basically the same as the greedyBFS + adding the depth to the manhattan heuristic function;
+void aStar(State s, std::vector<int> goal){
+    std::priority_queue< std::pair<int, State> > bfsQueue;
+    bfsQueue.push(std::make_pair(s.depth + manhattanHeuristic(s.grid, goal), s));
+    visited.insert(s.grid);
 
+    while(!bfsQueue.empty()){
+
+        State current = bfsQueue.top().second;
+        bfsQueue.pop();
+
+        /*
+        for(int i = 0; i < current.grid.size(); i++){
+            if(i % x == 0) std::cout << std::endl;
+            std::cout << current.grid[i] << " ";
+        }
+        std::cout << std::endl;
+        */
+
+        if(isGoalState(current, goal)){
+            std::cout << "Depth is " << current.depth << std::endl;
+            std::cout << "Goal state reached" << std::endl;
+            //printAncestors(current);
+            return;
+        }
+
+        int zeroIndex = findZero(current.grid);
+        if((zeroIndex % x) < (x - 1)){
+            //you can move right
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + 1]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(nextState.depth + manhattanHeuristic(nextGrid, goal), nextState));
+            }
+        }
+        if((zeroIndex % x) > 0){
+            //you can move left
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - 1]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(nextState.depth + manhattanHeuristic(nextGrid, goal), nextState));
+            }
+        }
+        if((zeroIndex % (x * y)) < (x * y - 1) && zeroIndex + x < x * y * z){
+            //you can move up
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(nextState.depth + manhattanHeuristic(nextGrid, goal), nextState));
+            }
+        }
+        if((zeroIndex % (x * y)) > 0 && zeroIndex - x > -1){
+            //you can move down
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(nextState.depth + manhattanHeuristic(nextGrid, goal), nextState));
+            }
+        }
+        if((zeroIndex % (x * y * z)) < ((x * y * z) - 1) && zeroIndex + x * y < x * y * z){
+            //you can move to the front
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex + x * y]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(nextState.depth + manhattanHeuristic(nextGrid, goal), nextState));
+            }
+        }
+        if((zeroIndex % (x * y * z)) > 0 && zeroIndex - x * y > -1){
+            //you can move to the back
+            std::vector<int> nextGrid = current.grid;
+            std::swap(nextGrid[zeroIndex], nextGrid[zeroIndex - x * y]);
+            if(!isVisited(nextGrid)){
+                visited.insert(nextGrid);
+                State nextState(nextGrid, &current, current.depth + 1);
+                bfsQueue.push(std::make_pair(nextState.depth + manhattanHeuristic(nextGrid, goal), nextState));
+            }
+        }
+
+    }
 }
+
+
 
 int main(void){
     freopen("in.in", "r", stdin);
@@ -352,7 +454,7 @@ int main(void){
     } else if(alg == "greedyBFS"){
         greedyBFS(initialState, goalGrid);
     } else if(alg == "aStar"){
-        aStar();
+        aStar(initialState, goalGrid);
     }
 
     return 0;
